@@ -1,8 +1,10 @@
 ﻿namespace ReactiveSockets
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Linq;
     using System.Net.Sockets;
+    using System.Reactive.Concurrency;
     using System.Reactive.Linq;
     using System.Reactive.Subjects;
     using System.Threading;
@@ -16,16 +18,22 @@
         private ReaderWriterLockSlim syncLock = new ReaderWriterLockSlim();
         private CancellationTokenSource cancellation;
 
-        private ISubject<byte> receiver = new Subject<byte>();
+        private BlockingCollection<byte> received = new BlockingCollection<byte>();
+
+        private IObservable<byte> receiver;
         private ISubject<byte> sender = new Subject<byte>();
 
         internal TcpSocket(TcpClient client)
+            : this()
         {
             Tracer.Log.TcpSocketCreated();
             Connect(client);
         }
 
-        protected TcpSocket() { }
+        protected TcpSocket() 
+        {
+            receiver = received.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default);
+        }
 
         public event EventHandler Connected = (sender, args) => { };
         public event EventHandler Disconnected = (sender, args) => { };
@@ -33,8 +41,8 @@
 
         public bool IsConnected { get { return client != null && client.Connected; } }
 
-        public IObservable<byte> Receiver { get { return receiver; } internal set { receiver = (ISubject<byte>)value; } }
-        public IObservable<byte> Sender { get { return sender; } internal set { sender = (ISubject<byte>)value; } }
+        public IObservable<byte> Receiver { get { return receiver; } }
+        public IObservable<byte> Sender { get { return sender; } }
 
         protected void Connect(TcpClient client)
         {
@@ -81,7 +89,7 @@
             // Subscribe to the new client with the new token.
             Observable
                 .Create<byte>(obs => Read(client, obs, cancellation.Token))
-                .Subscribe(b => receiver.OnNext(b), cancellation.Token);
+                .Subscribe(b => received.Add(b), cancellation.Token);
 
             Connected(this, EventArgs.Empty);
 

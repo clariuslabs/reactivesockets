@@ -1,6 +1,8 @@
 ﻿namespace ReactiveClient
 {
     using System;
+    using System.Reactive.Concurrency;
+    using System.Reactive.Linq;
     using ReactiveProtocol;
     using ReactiveSockets;
 
@@ -22,7 +24,7 @@
                 var client = new TcpClientSocket(host, port);
                 var protocol = new ProtocolClient(client);
 
-                protocol.Receiver.Subscribe(
+                protocol.Receiver.SubscribeOn(TaskPoolScheduler.Default).Subscribe(
                     s => Console.Write(s),
                     e => Console.WriteLine(e),
                     () => Console.WriteLine("Socket receiver completed"));

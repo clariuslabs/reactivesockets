@@ -1,33 +1,68 @@
 ﻿namespace ReactiveSockets.Tests
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Net.Sockets;
+    using System.Reactive.Concurrency;
     using System.Reactive.Linq;
     using System.Text;
     using System.Threading;
+    using System.Threading.Tasks;
     using Xunit;
 
     public class EndToEnd
     {
         [Fact]
+        public void when_consuming_enumerable_then_succeeds()
+        {
+            var bytes = new BlockingCollection<byte>();
+
+            var incoming = bytes.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default);
+
+            var messages = from header in incoming.Buffer(4)
+                           let length = BitConverter.ToInt32(header.ToArray(), 0)
+                           let body = incoming.Take(length)
+                           select Encoding.UTF8.GetString(body.ToEnumerable().ToArray());
+
+            messages.Subscribe(s => Console.Write(s));
+
+            var message = "hello";
+
+            BitConverter.GetBytes(message.Length).Concat(Encoding.UTF8.GetBytes(message)).ToList().ForEach(b => bytes.Add(b));
+
+            message = "world";
+
+            BitConverter.GetBytes(message.Length).Concat(Encoding.UTF8.GetBytes(message)).ToList().ForEach(b => bytes.Add(b));
+
+            Thread.Sleep(2000);
+
+            Console.WriteLine(bytes.Count);
+        }
+
+        [Fact]
         public void when_connected_then_can_exchange_fixed_length_messages()
         {
             var serverReceives = new List<string>();
             var clientReceives = new List<string>();
-            var messageLength = 32;
 
             var server = new TcpServer(1055);
             server.Start();
 
             Func<IObservable<byte>, IObservable<string>> parse =
-                socket => from message in socket.Buffer(messageLength)
-                          select Encoding.UTF8.GetString(message.ToArray());
+                socket => from header in socket.Buffer(4)
+                          let length = BitConverter.ToInt32(header.ToArray(), 0)
+                          let body = socket.Take(length)
+                          select Encoding.UTF8.GetString(body.ToEnumerable().ToArray());
 
             Func<string, byte[]> convert = s =>
             {
-                return Encoding.UTF8.GetBytes(new string(' ', messageLength - s.Length) + s);
+                var body = Encoding.UTF8.GetBytes(s);
+                var header = BitConverter.GetBytes(body.Length);
+                var payload = header.Concat(body).ToArray();
+
+                return payload;
             };
 
             server.Connections.Subscribe(socket =>
@@ -62,12 +97,6 @@
             Assert.Equal("Hello", serverReceives[0]);
 
             server.Dispose();
-
-            // Give it time to detect the disconnection from the server.
-            while (client.IsConnected)
-                client.SendAsync(new byte[1]);
-
-            Assert.Throws<InvalidOperationException>(() => client.SendAsync(convert("World")).Wait());
         }
 
         [Fact(Skip = @"Reconnecting for some reason is not working at all,
