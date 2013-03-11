@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ReactiveSockets.Tests")]
+[assembly: AssemblyTitle("ReactiveClient")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ReactiveSockets.Tests")]
+[assembly: AssemblyProduct("ReactiveClient")]
 [assembly: AssemblyCopyright("Copyright ©  2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("9aefec19-d98c-4339-b287-e9f0c79d21d2")]
+[assembly: Guid("5ce87a00-4171-4610-b21b-8ee0fa99760d")]
 
 // Version information for an assembly consists of the following four values:
 //

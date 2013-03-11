@@ -1,13 +1,6 @@
 ﻿namespace ReactiveSockets
 {
-    using System;
-    using System.Linq;
     using System.Net.Sockets;
-    using System.Reactive.Concurrency;
-    using System.Reactive.Disposables;
-    using System.Reactive.Linq;
-    using System.Reactive.Subjects;
-    using System.Threading;
     using System.Threading.Tasks;
 
     public class TcpClientSocket : TcpSocket
@@ -19,18 +12,19 @@
         {
             this.hostname = hostname;
             this.port = port;
+            Tracer.Log.TcpClientSocketCreated(hostname, port);
         }
 
-        public bool IsConnected { get { return TcpClient != null && TcpClient.Connected; } }
-
-        public void Connect()
+        public async Task ConnectAsync()
         {
-            if (TcpClient == null)
-            {
-                // ctor with credentials. Instantiating the TcpClient 
-                // already attempts to connect it.
-                Initialize(new TcpClient(hostname, port));
-            }
+            var client = new TcpClient();
+            await client.ConnectAsync(hostname, port);
+            Connect(client);
+        }
+
+        public new void Disconnect()
+        {
+            base.Disconnect();
         }
     }
 }

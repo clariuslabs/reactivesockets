@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
+﻿
 namespace ReactiveSockets
 {
     public class TcpServerSettings
@@ -13,5 +9,10 @@ namespace ReactiveSockets
         }
 
         public int Port { get; private set; }
+
+        public override string ToString()
+        {
+            return "Port: " + Port;
+        }
     }
 }

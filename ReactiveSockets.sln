@@ -4,6 +4,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveSockets", "ReactiveSockets\ReactiveSockets.csproj", "{3B854D2F-1BC1-4080-A47A-9B53BA2F995D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveSockets.Tests", "ReactiveSockets.Tests\ReactiveSockets.Tests.csproj", "{0502F800-A9AC-41D6-A789-78B78A38CBB6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FDC7C5B1-2167-47C8-BDA5-A46740A010B6} = {FDC7C5B1-2167-47C8-BDA5-A46740A010B6}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{131C7FD4-4E18-43C9-93AF-D340189267A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveClient", "Sample\ReactiveClient\ReactiveClient.csproj", "{BBC5AE1E-AA2C-4E23-A748-9046BB285370}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveServer", "Sample\ReactiveServer\ReactiveServer.csproj", "{FDC7C5B1-2167-47C8-BDA5-A46740A010B6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveProtocol", "Sample\ReactiveProtocol\ReactiveProtocol.csproj", "{064DC835-F7BD-4D21-B702-3F22ACF598D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,8 +30,25 @@ Global
 		{0502F800-A9AC-41D6-A789-78B78A38CBB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0502F800-A9AC-41D6-A789-78B78A38CBB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0502F800-A9AC-41D6-A789-78B78A38CBB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBC5AE1E-AA2C-4E23-A748-9046BB285370}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBC5AE1E-AA2C-4E23-A748-9046BB285370}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBC5AE1E-AA2C-4E23-A748-9046BB285370}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBC5AE1E-AA2C-4E23-A748-9046BB285370}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDC7C5B1-2167-47C8-BDA5-A46740A010B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDC7C5B1-2167-47C8-BDA5-A46740A010B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDC7C5B1-2167-47C8-BDA5-A46740A010B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDC7C5B1-2167-47C8-BDA5-A46740A010B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{064DC835-F7BD-4D21-B702-3F22ACF598D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{064DC835-F7BD-4D21-B702-3F22ACF598D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{064DC835-F7BD-4D21-B702-3F22ACF598D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{064DC835-F7BD-4D21-B702-3F22ACF598D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BBC5AE1E-AA2C-4E23-A748-9046BB285370} = {131C7FD4-4E18-43C9-93AF-D340189267A0}
+		{FDC7C5B1-2167-47C8-BDA5-A46740A010B6} = {131C7FD4-4E18-43C9-93AF-D340189267A0}
+		{064DC835-F7BD-4D21-B702-3F22ACF598D2} = {131C7FD4-4E18-43C9-93AF-D340189267A0}
 	EndGlobalSection
 EndGlobal

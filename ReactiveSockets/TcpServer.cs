@@ -2,8 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Net;
     using System.Net.Sockets;
     using System.Reactive.Linq;
     using System.Reactive.Subjects;
@@ -25,6 +23,7 @@
         public TcpServer(TcpServerSettings settings)
         {
             this.settings = settings;
+            Tracer.Log.TcpServerCreated(settings);
         }
 
         public IObservable<TcpSocket> Connections { get { return observable; } }
@@ -49,13 +48,26 @@
             listener = TcpListener.Create(settings.Port);
             listener.Start();
 
+            Tracer.Log.TcpListenerStarted(settings.Port);
+
             listenerSubscription = Observable
-                .FromAsync(listener.AcceptTcpClientAsync)
+                .FromAsync(() => 
+                    {
+                        Tracer.Log.TcpServerAwaitingNewTcpConnection();
+                        return listener.AcceptTcpClientAsync();
+                    })
+                .Repeat()
                 .Select(client => new TcpSocket(client))
                 .Subscribe(socket =>
                 {
                     connections.Add(socket);
                     observable.OnNext(socket);
+
+                    socket.Disposed += (sender, args) =>
+                    {
+                        Tracer.Log.TcpServerRemovingDisposedSocket();
+                        connections.Remove(socket);
+                    };
                 });
         }
     }
