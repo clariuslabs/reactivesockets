@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Net;
     using System.Net.Sockets;
     using System.Reactive.Linq;
     using System.Reactive.Subjects;
@@ -45,7 +46,10 @@
             if (disposed)
                 throw new ObjectDisposedException(this.ToString());
 
-            listener = TcpListener.Create(settings.Port);
+            // This is equivalent to the behavior of TcpListener.Create in .NET 4.5.
+            listener = new TcpListener(IPAddress.IPv6Any, settings.Port);
+            listener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, 0);
+
             listener.Start();
 
             Tracer.Log.TcpListenerStarted(settings.Port);

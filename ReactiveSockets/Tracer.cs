@@ -2,9 +2,7 @@
 {
     using System;
     using System.Diagnostics;
-    using System.Diagnostics.Tracing;
 
-    [EventSource(Name = "ReactiveSockets")]
     internal sealed class Tracer // : EventSource // TODO: we'll turn it into a proper ETW source
     {
         internal TraceSource source;

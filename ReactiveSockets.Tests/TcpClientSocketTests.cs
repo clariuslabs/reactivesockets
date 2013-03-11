@@ -25,34 +25,38 @@
         [Fact]
         public void when_connecting_then_raises_connected()
         {
-            var server = new TcpServer(1055);
-            var client = new TcpClientSocket("127.0.0.1", 1055);
-            var connected = false;
-            client.Connected += (sender, args) => connected = true;
+            using (var server = new TcpServer(1055))
+            {
+                var client = new TcpClientSocket("127.0.0.1", 1055);
+                var connected = false;
+                client.Connected += (sender, args) => connected = true;
 
-            server.Start();
-            client.ConnectAsync().Wait();
+                server.Start();
+                client.ConnectAsync().Wait();
 
-            Assert.True(client.IsConnected);
-            Assert.True(connected);
+                Assert.True(client.IsConnected);
+                Assert.True(connected);
+            }
         }
 
         [Fact]
         public void when_disconnecting_then_raises_disconnected()
         {
-            var server = new TcpServer(1055);
-            var client = new TcpClientSocket("127.0.0.1", 1055);
-            server.Start();
-            client.ConnectAsync().Wait();
+            using (var server = new TcpServer(1055))
+            {
+                var client = new TcpClientSocket("127.0.0.1", 1055);
+                server.Start();
+                client.ConnectAsync().Wait();
 
-            var disconnected = false;
-            client.Disconnected += (sender, args) => disconnected = true;
+                var disconnected = false;
+                client.Disconnected += (sender, args) => disconnected = true;
 
 
-            client.Disconnect();
+                client.Disconnect();
 
-            Assert.True(disconnected);
-            Assert.False(client.IsConnected);
+                Assert.True(disconnected);
+                Assert.False(client.IsConnected);
+            }
         }
 
         [Fact(Skip = "Does not work from tests.")]

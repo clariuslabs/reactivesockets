@@ -196,7 +196,7 @@
                 throw new InvalidOperationException("Not connected");
             }
 
-            return Task.Run(() =>
+            return Task.Factory.StartNew(() =>
             {
                 syncLock.EnterWriteLock();
                 try
