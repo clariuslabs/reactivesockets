@@ -47,7 +47,7 @@
             var serverReceives = new List<string>();
             var clientReceives = new List<string>();
 
-            var server = new TcpServer(1055);
+            var server = new ReactiveListener(1055);
             server.Start();
 
             Func<IObservable<byte>, IObservable<string>> parse =
@@ -77,7 +77,7 @@
                 socket.SendAsync(convert("Welcome!")).Wait();
             });
 
-            var client = new TcpClientSocket("127.0.0.1", 1055);
+            var client = new ReactiveClient("127.0.0.1", 1055);
             Console.WriteLine("Client socket created: {0}", client.GetHashCode());
 
             client.ConnectAsync().Wait();
@@ -108,7 +108,7 @@ It DOES work if they are two processes, so this is just a test artifact, runtime
             var clientReceives = new List<string>();
             var messageLength = 32;
 
-            var server = new TcpServer(1055);
+            var server = new ReactiveListener(1055);
             server.Start();
 
             Func<IObservable<byte>, IObservable<string>> parse =
@@ -132,7 +132,7 @@ It DOES work if they are two processes, so this is just a test artifact, runtime
                 socket.SendAsync(convert("Welcome!")).Wait();
             });
 
-            var client = new TcpClientSocket("127.0.0.1", 1055);
+            var client = new ReactiveClient("127.0.0.1", 1055);
             Console.WriteLine("Client socket created: {0}", client.GetHashCode());
 
             client.ConnectAsync().Wait();

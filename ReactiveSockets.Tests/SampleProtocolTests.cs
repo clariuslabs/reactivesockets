@@ -18,7 +18,7 @@
         public void when_parsing_bytes_then_raises_messages()
         {
             var bytes = new BlockingCollection<byte>();
-            var socket = Mock.Of<ISocket>(x => x.Receiver == bytes.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default));
+            var socket = Mock.Of<IReactiveSocket>(x => x.Receiver == bytes.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default));
 
             var protocol = new ProtocolClient(socket);
             var message = "";

@@ -13,14 +13,14 @@
     public class ProtocolClient
     {
         private Encoding encoding;
-        private ISocket socket;
+        private IReactiveSocket socket;
 
-        public ProtocolClient(ISocket socket)
+        public ProtocolClient(IReactiveSocket socket)
             : this(socket, Encoding.UTF8)
         {
         }
 
-        public ProtocolClient(ISocket socket, Encoding encoding)
+        public ProtocolClient(IReactiveSocket socket, Encoding encoding)
         {
             this.socket = socket;
             this.encoding = encoding;

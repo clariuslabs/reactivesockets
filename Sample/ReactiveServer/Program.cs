@@ -7,7 +7,6 @@
     using System.Reactive.Linq;
     using ReactiveProtocol;
     using ReactiveSockets;
-    using System.Reactive.Linq;
     using System.Reactive.Concurrency;
 
     class Program
@@ -18,7 +17,7 @@
             if (args.Length > 0)
                 port = int.Parse(args[0]);
 
-            var server = new TcpServer(port);
+            var server = new ReactiveListener(port);
 
             server.Connections.Subscribe(socket =>
                 {

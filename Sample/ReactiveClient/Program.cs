@@ -21,7 +21,7 @@
                 if (args.Length > 1)
                     port = int.Parse(args[1]);
 
-                var client = new TcpClientSocket(host, port);
+                var client = new ReactiveClient(host, port);
                 var protocol = new ProtocolClient(client);
 
                 protocol.Receiver.SubscribeOn(TaskPoolScheduler.Default).Subscribe(

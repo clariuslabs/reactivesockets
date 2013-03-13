@@ -19,88 +19,82 @@
 
         public static Tracer Log { get; private set; }
 
-        public void TcpClientSocketCreated(string host, int port)
+        public void ReactiveClientCreated(string host, int port)
         {
-            source.TraceInformation("TcpClientSocketCreated: {0}:{1}", host, port);
-            //WriteEvent(1);
+            source.TraceInformation("ReactiveClientCreated: {0}:{1}", host, port);
         }
 
-        public void TcpSocketCreated()
+        public void ReactiveSocketCreated()
         {
-            source.TraceInformation("TcpSocketCreated");
-            //WriteEvent(1);
+            source.TraceInformation("ReactiveSocketCreated");
         }
 
-        public void TcpSocketConnected()
+        public void ReactiveSocketConnected()
         {
-            source.TraceInformation("TcpSocketConnected");
-            //WriteEvent(2);
+            source.TraceInformation("ReactiveSocketConnected");
         }
 
-        public void TcpSocketReconnectDisposed()
+        public void ReactiveSocketReconnectDisposed()
         {
             source.TraceEvent(TraceEventType.Error, 0, "Attempted to reconnect a disposed socket.");
-            //WriteEvent(3);
         }
 
-        public void TcpSocketSendDisposed()
+        public void ReactiveSocketSendDisposed()
         {
             source.TraceEvent(TraceEventType.Error, 0, "Attempted to send data over a disposed socket.");
-            //WriteEvent(3);
         }
 
-        public void TcpSocketSendDisconnected()
+        public void ReactiveSocketSendDisconnected()
         {
             source.TraceEvent(TraceEventType.Error, 0, "Attempted to send data over a disconnected socket.");
-            //WriteEvent(3);
         }
 
-        public void TcpSocketReceivedDisconnectedTcpClient()
+        public void ReactiveSocketReceivedDisconnectedTcpClient()
         {
             source.TraceEvent(TraceEventType.Error, 0, "Attempted to initialize the socket with a disconnected TCP client instance.");
         }
 
-        public void TcpSocketAlreadyConnected()
+        public void ReactiveSocketAlreadyConnected()
         {
             source.TraceEvent(TraceEventType.Verbose, 0, "Initialized twice with the same instance of connected TCP client.");
         }
 
-        public void TcpSocketSwitchingUnderlyingClient()
+        public void ReactiveSocketSwitchingUnderlyingClient()
         {
             source.TraceInformation("Changing exisiting TCP client with a new one.");
         }
 
-        public void TcpSocketDisconnected()
+        public void ReactiveSocketDisconnected()
         {
             source.TraceInformation("Closed connected client.");
         }
 
-        public void TcpSocketReadFailed(Exception e)
+        public void ReactiveSocketReadFailed(Exception e)
         {
             source.TraceEvent(TraceEventType.Warning, 0, "Read failed: {0}", e.Message);
         }
 
-        public void TcpServerCreated(TcpServerSettings settings)
+        public void ReactiveListenerCreated(ReactiveListenerSettings settings)
         {
-            source.TraceInformation("TcpServer created with settings: {0}", settings);
+            source.TraceInformation("TCP server created with settings: {0}", settings);
         }
 
-        public void TcpListenerStarted(int port)
+        public void ReactiveListenerStarted(int port)
         {
             source.TraceInformation("TCP server listener started on port {0}", port);
         }
 
-        public void TcpServerAwaitingNewTcpConnection()
+        public void ReactiveListenerAwaitingNewTcpConnection()
         {
             source.TraceInformation("Accepting new TCP clients asynchronously");
         }
 
-        public void TcpSocketDisposed()
+        public void ReactiveSocketDisposed()
         {
             source.TraceInformation("Socket was disposed, removing from list of active connections");
         }
 
-        public void TcpServerRemovingDisposedSocket()
+        public void ReactiveListenerRemovingDisposedSocket()
         {
             source.TraceInformation("Socket was disposed, removing from list of active connections");
         }

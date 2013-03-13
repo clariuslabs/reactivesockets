@@ -9,7 +9,7 @@
         [Fact]
         public void when_client_created_then_it_is_disconnected()
         {
-            var client = new TcpClientSocket("127.0.0.1", 1055);
+            var client = new ReactiveClient("127.0.0.1", 1055);
 
             Assert.False(client.IsConnected);
         }
@@ -17,7 +17,7 @@
         [Fact]
         public void when_disconnecting_disconnected_then_throws()
         {
-            var client = new TcpClientSocket("127.0.0.1", 1055);
+            var client = new ReactiveClient("127.0.0.1", 1055);
 
             Assert.Throws<InvalidOperationException>(() => client.Disconnect());
         }
@@ -25,9 +25,9 @@
         [Fact]
         public void when_connecting_then_raises_connected()
         {
-            using (var server = new TcpServer(1055))
+            using (var server = new ReactiveListener(1055))
             {
-                var client = new TcpClientSocket("127.0.0.1", 1055);
+                var client = new ReactiveClient("127.0.0.1", 1055);
                 var connected = false;
                 client.Connected += (sender, args) => connected = true;
 
@@ -42,9 +42,9 @@
         [Fact]
         public void when_disconnecting_then_raises_disconnected()
         {
-            using (var server = new TcpServer(1055))
+            using (var server = new ReactiveListener(1055))
             {
-                var client = new TcpClientSocket("127.0.0.1", 1055);
+                var client = new ReactiveClient("127.0.0.1", 1055);
                 server.Start();
                 client.ConnectAsync().Wait();
 
@@ -67,7 +67,7 @@
             var server = Process.Start(@".\..\..\..\Sample\ReactiveServer\bin\Debug\ReactiveServer.exe");
             try
             {
-                var client = new TcpClientSocket("127.0.0.1", 1055);
+                var client = new ReactiveClient("127.0.0.1", 1055);
                 client.ConnectAsync().Wait();
                 Assert.True(client.IsConnected);
 
