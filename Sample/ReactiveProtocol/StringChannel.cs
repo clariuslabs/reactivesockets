@@ -10,22 +10,35 @@
     using System.Threading.Tasks;
     using ReactiveSockets;
 
-    public class ProtocolClient
+    /// <summary>
+    /// Implements a communication channel over a socket that 
+    /// has a fixed length header and a variable length string 
+    /// payload.
+    /// </summary>
+    public class StringChannel : IChannel<string>
     {
         private Encoding encoding;
         private IReactiveSocket socket;
 
-        public ProtocolClient(IReactiveSocket socket)
+        /// <summary>
+        /// Initializes the channel with the given socket, using 
+        /// the default UTF8 encoding for messages.
+        /// </summary>
+        public StringChannel(IReactiveSocket socket)
             : this(socket, Encoding.UTF8)
         {
         }
 
-        public ProtocolClient(IReactiveSocket socket, Encoding encoding)
+        /// <summary>
+        /// Initializes the channel with the given socket, using 
+        /// the given encoding for messages.
+        /// </summary>
+        public StringChannel(IReactiveSocket socket, Encoding encoding)
         {
             this.socket = socket;
             this.encoding = encoding;
 
-            Receiver = from header in socket.Receiver.Buffer(4)
+            Receiver = from header in socket.Receiver.Buffer(sizeof(int))
                        let length = BitConverter.ToInt32(header.ToArray(), 0)
                        let body = socket.Receiver.Take(length)
                        select Encoding.UTF8.GetString(body.ToEnumerable().ToArray());

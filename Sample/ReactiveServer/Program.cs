@@ -20,20 +20,20 @@
             var server = new ReactiveListener(port);
 
             server.Connections.Subscribe(socket =>
-                {
-                    Console.WriteLine("New socket connected {0}", socket.GetHashCode());
+            {
+                Console.WriteLine("New socket connected {0}", socket.GetHashCode());
 
-                    var protocol = new ProtocolClient(socket);
+                var protocol = new StringChannel(socket);
 
-                    // Here we hook the "echo" prototocol
-                    protocol.Receiver.Subscribe(
-                        s => { Console.Write(s); protocol.SendAsync(s).Wait(); }, 
-                        e => Console.WriteLine(e),
-                        () => Console.WriteLine("Socket receiver completed"));
+                // Here we hook the "echo" prototocol
+                protocol.Receiver.Subscribe(
+                    s => { Console.Write(s); protocol.SendAsync(s).Wait(); }, 
+                    e => Console.WriteLine(e),
+                    () => Console.WriteLine("Socket receiver completed"));
 
-                    socket.Disconnected += (sender, e) => Console.WriteLine("Socket disconnected {0}", sender.GetHashCode());
-                    socket.Disposed += (sender, e) => Console.WriteLine("Socket disposed {0}", sender.GetHashCode());
-                });
+                socket.Disconnected += (sender, e) => Console.WriteLine("Socket disconnected {0}", sender.GetHashCode());
+                socket.Disposed += (sender, e) => Console.WriteLine("Socket disposed {0}", sender.GetHashCode());
+            });
 
             server.Start();
 

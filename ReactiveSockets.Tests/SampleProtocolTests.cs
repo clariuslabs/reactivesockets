@@ -20,7 +20,7 @@
             var bytes = new BlockingCollection<byte>();
             var socket = Mock.Of<IReactiveSocket>(x => x.Receiver == bytes.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default));
 
-            var protocol = new ProtocolClient(socket);
+            var protocol = new StringChannel(socket);
             var message = "";
 
             protocol.Receiver.SubscribeOn(TaskPoolScheduler.Default).Subscribe(s => message = s);

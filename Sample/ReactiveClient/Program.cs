@@ -22,7 +22,7 @@
                     port = int.Parse(args[1]);
 
                 var client = new ReactiveClient(host, port);
-                var protocol = new ProtocolClient(client);
+                var protocol = new StringChannel(client);
 
                 protocol.Receiver.SubscribeOn(TaskPoolScheduler.Default).Subscribe(
                     s => Console.Write(s),
