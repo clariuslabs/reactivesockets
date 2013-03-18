@@ -75,8 +75,16 @@
         public bool IsConnected { get { return client != null && client.Connected; } }
 
         /// <summary>
-        /// Observable bytes that are being received by this endpoint.
+        /// Observable bytes that are being received by this endpoint. Note that 
+        /// subscribing to the receiver blocks until a byte is received, so 
+        /// subscribers will typically use the extension method <c>SubscribeOn</c> 
+        /// to specify the scheduler to use for subscription.
         /// </summary>
+        /// <remarks>
+        /// This blocking characteristic also propagates to higher level channels built 
+        /// on top of this socket, but it's not necessary to use SubscribeOn 
+        /// at more than one level.
+        /// </remarks>
         public IObservable<byte> Receiver { get { return receiver; } }
 
         /// <summary>
