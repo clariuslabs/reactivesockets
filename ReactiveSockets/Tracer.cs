@@ -74,9 +74,9 @@
             source.TraceEvent(TraceEventType.Warning, 0, "Read failed: {0}", e.Message);
         }
 
-        public void ReactiveListenerCreated(ReactiveListenerSettings settings)
+        public void ReactiveListenerCreated(int port)
         {
-            source.TraceInformation("TCP server created with settings: {0}", settings);
+            source.TraceInformation("TCP server created for port {0}", port);
         }
 
         public void ReactiveListenerStarted(int port)

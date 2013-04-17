@@ -21,24 +21,16 @@
         private Net.TcpListener listener;
         // This is the subscription to the AcceptTcpClientAsync
         private IDisposable listenerSubscription;
-        private ReactiveListenerSettings settings;
+        private int port;
         private bool disposed;
 
         /// <summary>
         /// Initializes the listener with the given port.
         /// </summary>
         public ReactiveListener(int port)
-            : this(new ReactiveListenerSettings(port))
         {
-        }
-
-        /// <summary>
-        /// Initializes the listener with the given settings.
-        /// </summary>
-        public ReactiveListener(ReactiveListenerSettings settings)
-        {
-            this.settings = settings;
-            Tracer.Log.ReactiveListenerCreated(settings);
+            this.port = port;
+            Tracer.Log.ReactiveListenerCreated(port);
         }
 
         /// <summary>
@@ -71,12 +63,12 @@
                 throw new ObjectDisposedException(this.ToString());
 
             // This is equivalent to the behavior of TcpListener.Create in .NET 4.5.
-            listener = new Net.TcpListener(IPAddress.IPv6Any, settings.Port);
-            listener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, 0);
+            listener = new Net.TcpListener(IPAddress.Any, port);
+            //listener.Server.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.IPv6Only, 0);
 
             listener.Start();
 
-            Tracer.Log.ReactiveListenerStarted(settings.Port);
+            Tracer.Log.ReactiveListenerStarted(port);
 
             listenerSubscription = Observable
                 .FromAsync(() => 
