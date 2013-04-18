@@ -49,7 +49,7 @@
         /// Protected constructor used by <see cref="ReactiveClient"/> 
         /// client.
         /// </summary>
-        protected internal ReactiveSocket() 
+        protected internal ReactiveSocket()
         {
             receiver = received.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default);
         }
@@ -140,9 +140,7 @@
             cancellation = new CancellationTokenSource();
 
             // Subscribe to the new client with the new token.
-            Observable
-                .Create<byte>(obs => Read(client, obs, cancellation.Token))
-                .Subscribe(b => received.Add(b), cancellation.Token);
+            BeginRead();
 
             Connected(this, EventArgs.Empty);
 
@@ -205,39 +203,36 @@
             Disposed(this, EventArgs.Empty);
         }
 
-        private async Task<IDisposable> Read(TcpClient client, IObserver<byte> obs, CancellationToken token)
+        private void BeginRead()
         {
-            while (!token.IsCancellationRequested)
+            Task.Factory.StartNew(() =>
             {
-                try
+                var stream = client.GetStream();
+                var buffer = new byte[128];
+                while (!cancellation.IsCancellationRequested)
                 {
-                    var buffer = new byte[client.Available];
-                    var count = await client.GetStream().ReadAsync(buffer, 0, buffer.Length, token);
-                    foreach (var b in buffer.Take(count))
-                        obs.OnNext(b);
-                }
-                catch (Exception e)
-                {
-                    if (!token.IsCancellationRequested)
+                    try
                     {
-                        Tracer.Log.ReactiveSocketReadFailed(e);
+                        var read = Task.Factory.FromAsync<byte[], int, int, int>(
+                            stream.BeginRead,
+                            stream.EndRead,
+                            buffer, 0, buffer.Length,
+                            default(object),
+                            TaskCreationOptions.AttachedToParent).Result;
 
-                        obs.OnError(e);
-                        Disconnect(false);
+                        for (int i = 0; i < read; i++)
+                            received.Add(buffer[i]);
                     }
-                    // Token cancellation was requested: we have two 
-                    // scenarios:
-                    // - Dispose: requested the cancel as part of a Dispose.
-                    //            this is truly the end of this instance.
-                    // - Disconnect: requested cancel but we may reconnect.
-                    else if (disposed)
+                    catch (Exception e)
                     {
-                        obs.OnCompleted();
+                        if (!cancellation.IsCancellationRequested)
+                        {
+                            Tracer.Log.ReactiveSocketReadFailed(e);
+                            Disconnect(false);
+                        }
                     }
                 }
-            }
-
-            return (IDisposable)cancellation;
+            }, cancellation.Token);
         }
 
         /// <summary>
@@ -271,8 +266,8 @@
                 syncLock.EnterWriteLock();
                 try
                 {
-                    client.GetStream()
-                        .WriteAsync(bytes, 0, bytes.Length, cancellation)
+                    var stream = client.GetStream();
+                    Task.Factory.FromAsync<byte[], int, int>(stream.BeginWrite, stream.EndWrite, bytes, 0, bytes.Length, null, TaskCreationOptions.AttachedToParent)
                         .Wait(cancellation);
 
                     foreach (var b in bytes)

@@ -7,6 +7,7 @@
     using System.Net.Sockets;
     using System.Reactive.Linq;
     using System.Reactive.Subjects;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Implements a TCP listener.
@@ -74,7 +75,7 @@
                 .FromAsync(() => 
                     {
                         Tracer.Log.ReactiveListenerAwaitingNewTcpConnection();
-                        return listener.AcceptTcpClientAsync();
+                        return Task.Factory.FromAsync<TcpClient>(listener.BeginAcceptTcpClient, listener.EndAcceptTcpClient, TaskCreationOptions.AttachedToParent);
                     })
                 .Repeat()
                 .Select(client => new ReactiveSocket(client))

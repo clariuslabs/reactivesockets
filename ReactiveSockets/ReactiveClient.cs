@@ -26,11 +26,12 @@
         /// <summary>
         /// Attemps to connect to the TCP server.
         /// </summary>
-        public async Task ConnectAsync()
+        public Task ConnectAsync()
         {
             var client = new TcpClient();
-            await client.ConnectAsync(hostname, port);
-            Connect(client);
+            return Task.Factory
+                .FromAsync<string, int>(client.BeginConnect, client.EndConnect, hostname, port, null)
+                .ContinueWith(_ => Connect(client), TaskContinuationOptions.OnlyOnRanToCompletion);
         }
 
         /// <summary>
