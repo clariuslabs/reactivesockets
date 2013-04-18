@@ -44,9 +44,6 @@ Creating the server implementation is equally straightforward (this is an echo s
             server.Start();
 
 
-Install for .NET 4.5 using: install-package reactivesockets
-Install for .NET 4.0 using: install-package reactivesockets -pre
-
-(For .NET 4.0, you need to install the pre-release version, since we depend on the pre-released Microsoft.Bcl.Async package to provide the asynchronous C# extensions)
+Install using: install-package reactivesockets
 
 This library was inspired by this [forum post](http://social.msdn.microsoft.com/Forums/en/rx/thread/5c62e690-2c8d-4f32-8ec4-5e9b5ea6d2a0) and [blog entry](http://www.cachelog.net/using-reactive-extensions-rx-tpl-for-socket-programming/).
