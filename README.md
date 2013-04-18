@@ -44,6 +44,6 @@ Creating the server implementation is equally straightforward (this is an echo s
             server.Start();
 
 
-Install using: install-package reactivesockets
+Install using: [install-package reactivesockets](https://nuget.org/packages/ReactiveSockets)
 
 This library was inspired by this [forum post](http://social.msdn.microsoft.com/Forums/en/rx/thread/5c62e690-2c8d-4f32-8ec4-5e9b5ea6d2a0) and [blog entry](http://www.cachelog.net/using-reactive-extensions-rx-tpl-for-socket-programming/).
