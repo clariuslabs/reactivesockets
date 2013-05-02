@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <metadata>
         <id>ReactiveSockets</id>
-        <version>0.2.0</version>
+        <version>0.2.1</version>
         <title>Reactive Sockets</title>
         <summary>The easiest way to do socket programming in .NET, leveraging simple Rx queries to implement your protocols.</summary>
         <description>
