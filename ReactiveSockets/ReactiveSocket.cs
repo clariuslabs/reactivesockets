@@ -95,6 +95,15 @@
         public IObservable<byte> Sender { get { return sender; } }
 
         /// <summary>
+        /// Gets the TcpClient stream to use. 
+        /// </summary>
+        /// <remarks>Virtual so it can be overridden to implement SSL</remarks>
+        protected virtual System.IO.Stream GetStream()
+        {
+            return client.GetStream();
+        }
+
+        /// <summary>
         /// Connects the reactive socket using the given TCP client.
         /// </summary>
         protected internal void Connect(TcpClient client)
@@ -207,7 +216,7 @@
         {
             Task.Factory.StartNew(() =>
             {
-                var stream = client.GetStream();
+                var stream = GetStream();
                 var buffer = new byte[128];
                 while (!cancellation.IsCancellationRequested)
                 {
@@ -266,7 +275,7 @@
                 syncLock.EnterWriteLock();
                 try
                 {
-                    var stream = client.GetStream();
+                    var stream = GetStream();
                     Task.Factory.FromAsync<byte[], int, int>(stream.BeginWrite, stream.EndWrite, bytes, 0, bytes.Length, null, TaskCreationOptions.AttachedToParent)
                         .Wait(cancellation);
 
