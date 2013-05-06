@@ -14,6 +14,8 @@ namespace ReactiveSockets
         private string hostname;
         private int port;
         private readonly Func<Stream, Stream> streamTransform;
+        private Stream stream;
+        private readonly object getStreamLock = new object();
 
         /// <summary>
         /// Initializes the reactive client.
@@ -77,7 +79,11 @@ namespace ReactiveSockets
         /// <returns></returns>
         protected override Stream GetStream()
         {
-            return streamTransform == null ? base.GetStream() : streamTransform(base.GetStream());
+            lock (getStreamLock)
+            {
+                return stream ??
+                       (stream = (streamTransform == null ? base.GetStream() : streamTransform(base.GetStream())));
+            }
         }
     }
 }
