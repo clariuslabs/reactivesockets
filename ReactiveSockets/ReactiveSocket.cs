@@ -182,6 +182,8 @@
                 cancellation.Dispose();
             }
 
+            cancellation = null;
+
             if (IsConnected)
             {
                 client.Close();

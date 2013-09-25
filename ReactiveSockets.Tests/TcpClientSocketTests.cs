@@ -59,6 +59,20 @@
             }
         }
 
+        [Fact]
+        public void when_calling_dispose_after_disconnect_then_work()
+        {
+            using (var server = new ReactiveListener(1055))
+            {
+                var client = new ReactiveClient("127.0.0.1", 1055);
+                server.Start();
+                client.ConnectAsync().Wait();
+
+                client.Disconnect();
+                client.Dispose();
+            }
+        }
+
         [Fact(Skip = "Does not work from tests.")]
         public void when_reconnecting_then_raises_connected()
         {
