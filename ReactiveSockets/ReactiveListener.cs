@@ -8,6 +8,7 @@
     using System.Reactive.Linq;
     using System.Reactive.Subjects;
     using System.Threading.Tasks;
+    using System.Reactive.Disposables;
 
     /// <summary>
     /// Implements a TCP listener.
@@ -24,6 +25,7 @@
         private IDisposable listenerSubscription;
         private int port;
         private bool disposed;
+        private CompositeDisposable socketDisposable;
 
         /// <summary>
         /// Initializes the listener with the given port.
@@ -32,6 +34,8 @@
         {
             this.port = port;
             Tracer.Log.ReactiveListenerCreated(port);
+
+            this.socketDisposable = new CompositeDisposable();
         }
 
         /// <summary>
@@ -52,6 +56,7 @@
             listener.Stop();
             listener = null;
             listenerSubscription.Dispose();
+            this.socketDisposable.Dispose();
             connections.ForEach(socket => socket.Dispose());
         }
 
@@ -84,11 +89,14 @@
                     connections.Add(socket);
                     observable.OnNext(socket);
 
-                    socket.Disposed += (sender, args) =>
-                    {
-                        Tracer.Log.ReactiveListenerRemovingDisposedSocket();
-                        connections.Remove(socket);
-                    };
+                    IDisposable disposeSubscription = Observable.FromEventPattern(h => socket.Disposed += h, h => socket.Disposed -= h)
+                        .FirstAsync().Subscribe(x =>
+                        {
+                            Tracer.Log.ReactiveListenerRemovingDisposedSocket();
+                            connections.Remove(socket);
+                        });
+
+                    this.socketDisposable.Add(disposeSubscription);
                 });
         }
     }
