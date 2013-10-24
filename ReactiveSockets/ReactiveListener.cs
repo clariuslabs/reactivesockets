@@ -89,7 +89,8 @@
                     connections.Add(socket);
                     observable.OnNext(socket);
 
-                    IDisposable disposeSubscription = Observable.FromEventPattern(h => socket.Disposed += h, h => socket.Disposed -= h)
+                    IDisposable disposeSubscription = Observable.FromEventPattern<EventHandler, EventArgs>(
+                            h => socket.Disposed += h, h => socket.Disposed -= h)
                         .FirstAsync().Subscribe(x =>
                         {
                             Tracer.Log.ReactiveListenerRemovingDisposedSocket();
