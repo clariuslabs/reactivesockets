@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="EndToEnd.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReactiveListenerTests.cs" />
     <Compile Include="SampleProtocolTests.cs" />
     <Compile Include="TcpClientSocketTests.cs" />
   </ItemGroup>
