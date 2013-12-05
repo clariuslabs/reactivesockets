@@ -225,13 +225,13 @@
             this.readSubscription = Observable.Defer(() => 
                     Observable.FromAsyncPattern<byte[], int, int, int>(stream.BeginRead, stream.EndRead)(buffer, 0, buffer.Length))
                 .Repeat()
-                .Where(x => x != -1)
+                .TakeWhile(x => x > 0)
                 .SelectMany(buffer.Take)
                 .Subscribe(x => this.received.Add(x), ex =>
                 {
                     Tracer.Log.ReactiveSocketReadFailed(ex);
                     Disconnect(false);
-                });
+                }, () => Disconnect(false));
         }
 
         /// <summary>
