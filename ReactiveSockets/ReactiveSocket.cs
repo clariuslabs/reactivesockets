@@ -26,7 +26,7 @@ namespace ReactiveSockets
         private TcpClient client;
         // This allows us to write to the underlying socket in a 
         // single-threaded fashion.
-        private ReaderWriterLockSlim syncLock = new ReaderWriterLockSlim();
+        private object syncLock = new object();
         private IDisposable readSubscription;
 
         // This allows protocols to be easily built by consuming 
@@ -211,8 +211,6 @@ namespace ReactiveSockets
 
             Disconnect(true);
 
-            syncLock.Dispose();
-
             sender.OnCompleted();
             receiverTermination.OnNext(Unit.Default);
 
@@ -264,12 +262,15 @@ namespace ReactiveSockets
             }
             
             var stream = this.GetStream();
-            syncLock.EnterWriteLock();
-            return Observable.FromAsyncPattern<byte[], int, int>(stream.BeginWrite, stream.EndWrite)(bytes, 0, bytes.Length)
-                .Finally(() => syncLock.ExitWriteLock())
-                .SelectMany(_ => bytes)
-                .Do(x => sender.OnNext(x), ex => Disconnect())
-                .ToTask(cancellation);
+            return Observable.Start(() => 
+            {
+                Monitor.Enter(syncLock);
+                stream.Write(bytes, 0, bytes.Length);
+            })
+            .Finally(() => Monitor.Exit(syncLock))
+            .SelectMany(_ => bytes)
+            .Do(x => sender.OnNext(x), ex => Disconnect())
+            .ToTask(cancellation);
         }
 
         #region SocketOptions
