@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Reactive.Threading.Tasks;
 
 namespace ReactiveSockets
 {
@@ -254,29 +255,14 @@ namespace ReactiveSockets
                 Tracer.Log.ReactiveSocketSendDisconnected();
                 throw new InvalidOperationException("Not connected");
             }
-
-            return Task.Factory.StartNew(() =>
-            {
-                syncLock.EnterWriteLock();
-                try
-                {
-                    var stream = GetStream();
-                    Task.Factory.FromAsync<byte[], int, int>(stream.BeginWrite, stream.EndWrite, bytes, 0, bytes.Length, null, TaskCreationOptions.AttachedToParent)
-                        .Wait(cancellation);
-                    
-                    foreach (var b in bytes)
-                        sender.OnNext(b);
-                }
-                catch (Exception)
-                {
-                    Disconnect();
-                    throw;
-                }
-                finally
-                {
-                    syncLock.ExitWriteLock();
-                }
-            }, cancellation);
+            
+            var stream = this.GetStream();
+            syncLock.EnterWriteLock();
+            return Observable.FromAsyncPattern<byte[], int, int>(stream.BeginWrite, stream.EndWrite)(bytes, 0, bytes.Length)
+                .Finally(() => syncLock.ExitWriteLock())
+                .SelectMany(_ => bytes)
+                .Do(x => sender.OnNext(x), ex => Disconnect())
+                .ToTask(cancellation);
         }
 
         #region SocketOptions
