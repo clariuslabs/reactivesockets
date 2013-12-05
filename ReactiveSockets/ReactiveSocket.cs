@@ -264,9 +264,9 @@
             return Observable.Start(() => 
             {
                 Monitor.Enter(syncLock);
-                stream.Write(bytes, 0, bytes.Length);
+                try  { stream.Write(bytes, 0, bytes.Length); }
+                finally { Monitor.Exit(syncLock); }
             })
-            .Finally(() => Monitor.Exit(syncLock))
             .SelectMany(_ => bytes)
             .Do(x => sender.OnNext(x), ex => Disconnect())
             .ToTask(cancellation);
