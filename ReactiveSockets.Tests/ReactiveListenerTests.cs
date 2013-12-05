@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
-
-namespace ReactiveSockets.Tests
+﻿namespace ReactiveSockets.Tests
 {
+    using System;
+    using Xunit;
+
     public class ReactiveListenerTests
     {
         [Fact]

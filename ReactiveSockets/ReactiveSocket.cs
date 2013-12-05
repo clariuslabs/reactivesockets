@@ -1,8 +1,4 @@
-﻿using System.IO;
-using System.Reactive;
-using System.Reactive.Threading.Tasks;
-
-namespace ReactiveSockets
+﻿namespace ReactiveSockets
 {
     using System;
     using System.Collections.Concurrent;
@@ -14,6 +10,9 @@ namespace ReactiveSockets
     using System.Threading;
     using System.Threading.Tasks;
     using ReactiveSockets.Properties;
+    using System.IO;
+    using System.Reactive;
+    using System.Reactive.Threading.Tasks;
 
     /// <summary>
     /// Implements the reactive socket base class, which is used 
