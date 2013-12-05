@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Reactive;
 using System.Reactive.Threading.Tasks;
 
 namespace ReactiveSockets
@@ -34,6 +35,8 @@ namespace ReactiveSockets
 
         // The receiver created from the above blocking collection.
         private IObservable<byte> receiver;
+        // Used to complete the receiver observable
+        private Subject<Unit> receiverTermination = new Subject<Unit>(); 
 
         // Subject used to pub/sub sent bytes.
         private ISubject<byte> sender = new Subject<byte>();
@@ -55,7 +58,8 @@ namespace ReactiveSockets
         /// </summary>
         protected internal ReactiveSocket()
         {
-            receiver = received.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default);
+            receiver = received.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default)
+                .TakeUntil(receiverTermination);
         }
 
         /// <summary>
@@ -208,6 +212,9 @@ namespace ReactiveSockets
             Disconnect(true);
 
             syncLock.Dispose();
+
+            sender.OnCompleted();
+            receiverTermination.OnNext(Unit.Default);
 
             Tracer.Log.ReactiveSocketDisposed();
 
