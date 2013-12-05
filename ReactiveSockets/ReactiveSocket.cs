@@ -1,4 +1,6 @@
-﻿namespace ReactiveSockets
+﻿using System.IO;
+
+namespace ReactiveSockets
 {
     using System;
     using System.Collections.Concurrent;
@@ -23,7 +25,7 @@
         // This allows us to write to the underlying socket in a 
         // single-threaded fashion.
         private ReaderWriterLockSlim syncLock = new ReaderWriterLockSlim();
-        private CancellationTokenSource cancellation;
+        private IDisposable readSubscription;
 
         // This allows protocols to be easily built by consuming 
         // bytes from the stream using Rx expressions.
@@ -31,6 +33,7 @@
 
         // The receiver created from the above blocking collection.
         private IObservable<byte> receiver;
+
         // Subject used to pub/sub sent bytes.
         private ISubject<byte> sender = new Subject<byte>();
 
@@ -140,13 +143,10 @@
             this.client = client;
 
             // Cancel possibly outgoing async work (i.e. reads).
-            if (cancellation != null && !cancellation.IsCancellationRequested)
+            if (readSubscription != null)
             {
-                cancellation.Cancel();
-                cancellation.Dispose();
+                readSubscription.Dispose();
             }
-
-            cancellation = new CancellationTokenSource();
 
             // Subscribe to the new client with the new token.
             BeginRead();
@@ -176,13 +176,12 @@
             if (disposed && !disposing)
                 throw new ObjectDisposedException(this.ToString());
 
-            if (cancellation != null)
+            if (readSubscription != null)
             {
-                cancellation.Cancel();
-                cancellation.Dispose();
+                readSubscription.Dispose();
             }
 
-            cancellation = null;
+            readSubscription = null;
 
             if (IsConnected)
             {
@@ -216,34 +215,18 @@
 
         private void BeginRead()
         {
-            Task.Factory.StartNew(() =>
-            {
-                var stream = GetStream();
-                var buffer = new byte[128];
-                while (!cancellation.IsCancellationRequested)
+            Stream stream = this.GetStream();
+            var buffer = new byte[128];
+            this.readSubscription = Observable.Defer(() => 
+                    Observable.FromAsyncPattern<byte[], int, int, int>(stream.BeginRead, stream.EndRead)(buffer, 0, buffer.Length))
+                .Repeat()
+                .Where(x => x != -1)
+                .SelectMany(buffer.Take)
+                .Subscribe(x => this.received.Add(x), ex =>
                 {
-                    try
-                    {
-                        var read = Task.Factory.FromAsync<byte[], int, int, int>(
-                            stream.BeginRead,
-                            stream.EndRead,
-                            buffer, 0, buffer.Length,
-                            default(object),
-                            TaskCreationOptions.AttachedToParent).Result;
-
-                        for (int i = 0; i < read; i++)
-                            received.Add(buffer[i]);
-                    }
-                    catch (Exception e)
-                    {
-                        if (!cancellation.IsCancellationRequested)
-                        {
-                            Tracer.Log.ReactiveSocketReadFailed(e);
-                            Disconnect(false);
-                        }
-                    }
-                }
-            }, cancellation.Token);
+                    Tracer.Log.ReactiveSocketReadFailed(ex);
+                    Disconnect(false);
+                });
         }
 
         /// <summary>
@@ -280,7 +263,7 @@
                     var stream = GetStream();
                     Task.Factory.FromAsync<byte[], int, int>(stream.BeginWrite, stream.EndWrite, bytes, 0, bytes.Length, null, TaskCreationOptions.AttachedToParent)
                         .Wait(cancellation);
-
+                    
                     foreach (var b in bytes)
                         sender.OnNext(b);
                 }
