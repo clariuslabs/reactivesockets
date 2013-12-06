@@ -10,6 +10,9 @@
     using System.Threading;
     using System.Threading.Tasks;
     using ReactiveSockets.Properties;
+    using System.IO;
+    using System.Reactive;
+    using System.Reactive.Threading.Tasks;
 
     /// <summary>
     /// Implements the reactive socket base class, which is used 
@@ -22,8 +25,8 @@
         private TcpClient client;
         // This allows us to write to the underlying socket in a 
         // single-threaded fashion.
-        private ReaderWriterLockSlim syncLock = new ReaderWriterLockSlim();
-        private CancellationTokenSource cancellation;
+        private object syncLock = new object();
+        private IDisposable readSubscription;
 
         // This allows protocols to be easily built by consuming 
         // bytes from the stream using Rx expressions.
@@ -31,6 +34,9 @@
 
         // The receiver created from the above blocking collection.
         private IObservable<byte> receiver;
+        // Used to complete the receiver observable
+        private Subject<Unit> receiverTermination = new Subject<Unit>(); 
+
         // Subject used to pub/sub sent bytes.
         private ISubject<byte> sender = new Subject<byte>();
 
@@ -51,7 +57,8 @@
         /// </summary>
         protected internal ReactiveSocket()
         {
-            receiver = received.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default);
+            receiver = received.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default)
+                .TakeUntil(receiverTermination);
         }
 
         /// <summary>
@@ -140,13 +147,10 @@
             this.client = client;
 
             // Cancel possibly outgoing async work (i.e. reads).
-            if (cancellation != null && !cancellation.IsCancellationRequested)
+            if (readSubscription != null)
             {
-                cancellation.Cancel();
-                cancellation.Dispose();
+                readSubscription.Dispose();
             }
-
-            cancellation = new CancellationTokenSource();
 
             // Subscribe to the new client with the new token.
             BeginRead();
@@ -176,13 +180,12 @@
             if (disposed && !disposing)
                 throw new ObjectDisposedException(this.ToString());
 
-            if (cancellation != null)
+            if (readSubscription != null)
             {
-                cancellation.Cancel();
-                cancellation.Dispose();
+                readSubscription.Dispose();
             }
 
-            cancellation = null;
+            readSubscription = null;
 
             if (IsConnected)
             {
@@ -207,7 +210,8 @@
 
             Disconnect(true);
 
-            syncLock.Dispose();
+            sender.OnCompleted();
+            receiverTermination.OnNext(Unit.Default);
 
             Tracer.Log.ReactiveSocketDisposed();
 
@@ -216,34 +220,18 @@
 
         private void BeginRead()
         {
-            Task.Factory.StartNew(() =>
-            {
-                var stream = GetStream();
-                var buffer = new byte[128];
-                while (!cancellation.IsCancellationRequested)
+            Stream stream = this.GetStream();
+            var buffer = new byte[128];
+            this.readSubscription = Observable.Defer(() => 
+                    Observable.FromAsyncPattern<byte[], int, int, int>(stream.BeginRead, stream.EndRead)(buffer, 0, buffer.Length))
+                .Repeat()
+                .TakeWhile(x => x > 0)
+                .SelectMany(buffer.Take)
+                .Subscribe(x => this.received.Add(x), ex =>
                 {
-                    try
-                    {
-                        var read = Task.Factory.FromAsync<byte[], int, int, int>(
-                            stream.BeginRead,
-                            stream.EndRead,
-                            buffer, 0, buffer.Length,
-                            default(object),
-                            TaskCreationOptions.AttachedToParent).Result;
-
-                        for (int i = 0; i < read; i++)
-                            received.Add(buffer[i]);
-                    }
-                    catch (Exception e)
-                    {
-                        if (!cancellation.IsCancellationRequested)
-                        {
-                            Tracer.Log.ReactiveSocketReadFailed(e);
-                            Disconnect(false);
-                        }
-                    }
-                }
-            }, cancellation.Token);
+                    Tracer.Log.ReactiveSocketReadFailed(ex);
+                    Disconnect(false);
+                }, () => Disconnect(false));
         }
 
         /// <summary>
@@ -271,29 +259,17 @@
                 Tracer.Log.ReactiveSocketSendDisconnected();
                 throw new InvalidOperationException("Not connected");
             }
-
-            return Task.Factory.StartNew(() =>
+            
+            var stream = this.GetStream();
+            return Observable.Start(() => 
             {
-                syncLock.EnterWriteLock();
-                try
-                {
-                    var stream = GetStream();
-                    Task.Factory.FromAsync<byte[], int, int>(stream.BeginWrite, stream.EndWrite, bytes, 0, bytes.Length, null, TaskCreationOptions.AttachedToParent)
-                        .Wait(cancellation);
-
-                    foreach (var b in bytes)
-                        sender.OnNext(b);
-                }
-                catch (Exception)
-                {
-                    Disconnect();
-                    throw;
-                }
-                finally
-                {
-                    syncLock.ExitWriteLock();
-                }
-            }, cancellation);
+                Monitor.Enter(syncLock);
+                try  { stream.Write(bytes, 0, bytes.Length); }
+                finally { Monitor.Exit(syncLock); }
+            })
+            .SelectMany(_ => bytes)
+            .Do(x => sender.OnNext(x), ex => Disconnect())
+            .ToTask(cancellation);
         }
 
         #region SocketOptions

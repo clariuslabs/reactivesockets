@@ -73,6 +73,23 @@
             }
         }
 
+        [Fact]
+        public void when_disposing_then_complete_observables()
+        {
+            var socket = new ReactiveClient("127.0.0.1", 1055);
+
+            bool receiverCompleted = false;
+            bool senderCompleted = false;
+
+            socket.Receiver.Subscribe(x => { }, () => receiverCompleted = true);
+            socket.Sender.Subscribe(x => { }, () => senderCompleted = true);
+
+            socket.Dispose();
+
+            Assert.True(receiverCompleted);
+            Assert.True(senderCompleted);
+        }
+
         [Fact(Skip = "Does not work from tests.")]
         public void when_reconnecting_then_raises_connected()
         {

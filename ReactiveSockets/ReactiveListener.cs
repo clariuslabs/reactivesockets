@@ -58,6 +58,7 @@
             listenerSubscription.Dispose();
             this.socketDisposable.Dispose();
             connections.ForEach(socket => socket.Dispose());
+            observable.OnCompleted();
         }
 
         /// <summary>
