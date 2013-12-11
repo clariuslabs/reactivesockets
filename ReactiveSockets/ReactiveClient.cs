@@ -23,7 +23,9 @@ namespace ReactiveSockets
         /// <param name="hostname">The host name or IP address of the TCP server to connect to.</param>
         /// <param name="port">The port to connect to.</param>
         /// <param name="maximumBufferSize">An optional value for the maximum number of bytes 
-        /// that is stored before TCP flow control kicks in.</param>
+        /// that is stored before TCP flow control kicks in.
+        /// The default value is <see cref="ReactiveSocket.MaximumBufferSize"/>
+        /// </param>
         public ReactiveClient(string hostname, int port, int maximumBufferSize = MaximumBufferSize) 
             : this(hostname, port, stream => stream, maximumBufferSize) { }
 
@@ -37,7 +39,9 @@ namespace ReactiveSockets
         /// <param name="streamTransform">The callback function to use to obtain the communication <see cref="Stream"/>.
         /// The callback is passed the original Stream from the underlying <see cref="TcpClient"/>.</param>
         /// <param name="maximumBufferSize">An optional value for the maximum number of bytes 
-        /// that is stored before TCP flow control kicks in.</param>
+        /// that is stored before TCP flow control kicks in.
+        /// The default value is <see cref="ReactiveSocket.MaximumBufferSize"/>
+        /// </param>
         /// <example>
         /// Using with SSL:
         /// <code>
