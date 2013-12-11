@@ -40,6 +40,11 @@
         // Subject used to pub/sub sent bytes.
         private ISubject<byte> sender = new Subject<byte>();
 
+        // The default receive buffer size of TcpClient according to
+        // http://msdn.microsoft.com/en-us/library/system.net.sockets.tcpclient.receivebuffersize.aspx
+        // is 8192 bytes
+        private int receiveBufferSize = 8192;
+
         /// <summary>
         /// Initializes the socket with a previously accepted TCP 
         /// client connection. This overload is used by the <see cref="ReactiveListener"/>.
@@ -102,6 +107,24 @@
         public IObservable<byte> Sender { get { return sender; } }
 
         /// <summary>
+        /// Gets or sets the size of the buffer for receiving data.
+        /// The default value is 8192 bytes.
+        /// </summary>
+        public int ReceiveBufferSize
+        {
+            get { return this.receiveBufferSize; }
+            set
+            {
+                this.receiveBufferSize = value;
+
+                if(this.client != null)
+                {
+                    this.client.ReceiveBufferSize = value;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the TcpClient stream to use. 
         /// </summary>
         /// <remarks>Virtual so it can be overridden to implement SSL</remarks>
@@ -145,6 +168,7 @@
             }
 
             this.client = client;
+            client.ReceiveBufferSize = receiveBufferSize;
 
             // Cancel possibly outgoing async work (i.e. reads).
             if (readSubscription != null)
@@ -221,12 +245,15 @@
         private void BeginRead()
         {
             Stream stream = this.GetStream();
-            var buffer = new byte[128];
             this.readSubscription = Observable.Defer(() => 
-                    Observable.FromAsyncPattern<byte[], int, int, int>(stream.BeginRead, stream.EndRead)(buffer, 0, buffer.Length))
+                {
+                    var buffer = new byte[this.ReceiveBufferSize];
+                    return Observable.FromAsyncPattern<byte[], int, int, int>(stream.BeginRead, stream.EndRead)(buffer, 0, buffer.Length)
+                        .Select(x => buffer.Take(x).ToArray());
+                })
                 .Repeat()
-                .TakeWhile(x => x > 0)
-                .SelectMany(buffer.Take)
+                .TakeWhile(x => x.Any())
+                .SelectMany(x => x)
                 .Subscribe(x => this.received.Add(x), ex =>
                 {
                     Tracer.Log.ReactiveSocketReadFailed(ex);
