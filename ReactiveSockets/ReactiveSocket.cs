@@ -30,7 +30,9 @@
 
         // This allows protocols to be easily built by consuming 
         // bytes from the stream using Rx expressions.
-        private BlockingCollection<byte> received = new BlockingCollection<byte>();
+        // We use a maximum capacity of 1MB, so we don't fill the 
+        // collection endlessly and risk an OutOfMemoryException
+        private BlockingCollection<byte> received;
 
         // The receiver created from the above blocking collection.
         private IObservable<byte> receiver;
@@ -46,11 +48,16 @@
         private int receiveBufferSize = 8192;
 
         /// <summary>
+        /// The maximum number of bytes that is stored to process for the <see cref="Receiver"/> observable.
+        /// </summary>
+        public const int MaximumBufferSize = 1024 * 1024;
+
+        /// <summary>
         /// Initializes the socket with a previously accepted TCP 
         /// client connection. This overload is used by the <see cref="ReactiveListener"/>.
         /// </summary>
         internal ReactiveSocket(TcpClient client)
-            : this()
+            : this(MaximumBufferSize)
         {
             Tracer.Log.ReactiveSocketCreated();
             Connect(client);
@@ -60,8 +67,12 @@
         /// Protected constructor used by <see cref="ReactiveClient"/> 
         /// client.
         /// </summary>
-        protected internal ReactiveSocket()
+        protected internal ReactiveSocket(int maximumBufferSize)
         {
+            if(maximumBufferSize < 0)
+                throw new ArgumentOutOfRangeException("maximumBufferSize", "Maximum buffer size must be greater than 0");
+
+            received = new BlockingCollection<byte>(maximumBufferSize);
             receiver = received.GetConsumingEnumerable().ToObservable(TaskPoolScheduler.Default)
                 .TakeUntil(receiverTermination);
         }
@@ -107,7 +118,8 @@
         public IObservable<byte> Sender { get { return sender; } }
 
         /// <summary>
-        /// Gets or sets the size of the buffer for receiving data.
+        /// Gets or sets the <see cref="TcpClient.ReceiveBufferSize"/> of the 
+        /// underlying <see cref="TcpClient"/>.
         /// The default value is 8192 bytes.
         /// </summary>
         public int ReceiveBufferSize
