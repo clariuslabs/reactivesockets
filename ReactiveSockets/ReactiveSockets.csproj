@@ -67,7 +67,6 @@
     <Compile Include="IReactiveSocket.cs" />
     <Compile Include="ISocket.cs" />
     <Compile Include="ISocketExtensions.cs" />
-    <Compile Include="netfx\System\StringFormatWith.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -83,7 +82,7 @@
     <Compile Include="ReactiveListener.cs" />
     <Compile Include="ReactiveListenerSettings.cs" />
     <Compile Include="ReactiveSocket.cs" />
-    <Compile Include="Tracer.cs" />
+    <Compile Include="TracerExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
