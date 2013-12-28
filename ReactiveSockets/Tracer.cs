@@ -1,102 +1,88 @@
 ﻿namespace ReactiveSockets
 {
+    using Diagnostics;
     using System;
-    using System.Diagnostics;
 
-    internal sealed class Tracer // : EventSource // TODO: we'll turn it into a proper ETW source
+    internal static class TracerExtensions
     {
-        internal TraceSource source;
-
-        static Tracer()
+        public static void ReactiveClientCreated(this ITracer tracer, string host, int port)
         {
-            Log = new Tracer();
+            tracer.Info("ReactiveClientCreated: {0}:{1}", host, port);
         }
 
-        public Tracer()
+        public static void ReactiveSocketCreated(this ITracer tracer)
         {
-            source = new TraceSource(typeof(Tracer).Namespace);
+            tracer.Info("ReactiveSocketCreated");
         }
 
-        public static Tracer Log { get; private set; }
-
-        public void ReactiveClientCreated(string host, int port)
+        public static void ReactiveSocketConnected(this ITracer tracer)
         {
-            source.TraceInformation("ReactiveClientCreated: {0}:{1}", host, port);
+            tracer.Info("ReactiveSocketConnected");
         }
 
-        public void ReactiveSocketCreated()
+        public static void ReactiveSocketReconnectDisposed(this ITracer tracer)
         {
-            source.TraceInformation("ReactiveSocketCreated");
+            tracer.Error("Attempted to reconnect a disposed socket.");
         }
 
-        public void ReactiveSocketConnected()
+        public static void ReactiveSocketSendDisposed(this ITracer tracer)
         {
-            source.TraceInformation("ReactiveSocketConnected");
+            tracer.Error("Attempted to send data over a disposed socket.");
         }
 
-        public void ReactiveSocketReconnectDisposed()
+        public static void ReactiveSocketSendDisconnected(this ITracer tracer)
         {
-            source.TraceEvent(TraceEventType.Error, 0, "Attempted to reconnect a disposed socket.");
+            tracer.Error("Attempted to send data over a disconnected socket.");
         }
 
-        public void ReactiveSocketSendDisposed()
+        public static void ReactiveSocketReceivedDisconnectedTcpClient(this ITracer tracer)
         {
-            source.TraceEvent(TraceEventType.Error, 0, "Attempted to send data over a disposed socket.");
+            tracer.Error("Attempted to initialize the socket with a disconnected TCP client instance.");
         }
 
-        public void ReactiveSocketSendDisconnected()
+        public static void ReactiveSocketAlreadyConnected(this ITracer tracer)
         {
-            source.TraceEvent(TraceEventType.Error, 0, "Attempted to send data over a disconnected socket.");
+            tracer.Verbose("Initialized twice with the same instance of connected TCP client.");
         }
 
-        public void ReactiveSocketReceivedDisconnectedTcpClient()
+        public static void ReactiveSocketSwitchingUnderlyingClient(this ITracer tracer)
         {
-            source.TraceEvent(TraceEventType.Error, 0, "Attempted to initialize the socket with a disconnected TCP client instance.");
+            tracer.Info("Changing exisiting TCP client with a new one.");
         }
 
-        public void ReactiveSocketAlreadyConnected()
+        public static void ReactiveSocketDisconnected(this ITracer tracer)
         {
-            source.TraceEvent(TraceEventType.Verbose, 0, "Initialized twice with the same instance of connected TCP client.");
+            tracer.Info("Closed connected client.");
         }
 
-        public void ReactiveSocketSwitchingUnderlyingClient()
+        public static void ReactiveSocketReadFailed(this ITracer tracer, Exception e)
         {
-            source.TraceInformation("Changing exisiting TCP client with a new one.");
+            tracer.Warn("Read failed: {0}", e.Message);
         }
 
-        public void ReactiveSocketDisconnected()
+        public static void ReactiveListenerCreated(this ITracer tracer, int port)
         {
-            source.TraceInformation("Closed connected client.");
+            tracer.Info("TCP server created for port {0}", port);
         }
 
-        public void ReactiveSocketReadFailed(Exception e)
+        public static void ReactiveListenerStarted(this ITracer tracer, int port)
         {
-            source.TraceEvent(TraceEventType.Warning, 0, "Read failed: {0}", e.Message);
+            tracer.Info("TCP server listener started on port {0}", port);
         }
 
-        public void ReactiveListenerCreated(int port)
+        public static void ReactiveListenerAwaitingNewTcpConnection(this ITracer tracer)
         {
-            source.TraceInformation("TCP server created for port {0}", port);
+            tracer.Info("Accepting new TCP clients asynchronously");
         }
 
-        public void ReactiveListenerStarted(int port)
+        public static void ReactiveSocketDisposed(this ITracer tracer)
         {
-            source.TraceInformation("TCP server listener started on port {0}", port);
+            tracer.Info("Socket was disposed, removing from list of active connections");
         }
 
-        public void ReactiveListenerAwaitingNewTcpConnection()
+        public static void ReactiveListenerRemovingDisposedSocket(this ITracer tracer)
         {
-            source.TraceInformation("Accepting new TCP clients asynchronously");
-        }
-
-        public void ReactiveSocketDisposed()
-        {
-            source.TraceInformation("Socket was disposed, removing from list of active connections");
-        }
-
-        public void ReactiveListenerRemovingDisposedSocket()
-        {
-            source.TraceInformation("Socket was disposed, removing from list of active connections");
+            tracer.Info("Socket was disposed, removing from list of active connections");
         }
     }
 }

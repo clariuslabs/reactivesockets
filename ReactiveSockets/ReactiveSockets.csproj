@@ -57,6 +57,11 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Diagnostics\Tracer\ITracer.cs" />
+    <Compile Include="Diagnostics\Tracer\ITracerExtensions.cs" />
+    <Compile Include="Diagnostics\Tracer\ITracerManager.cs" />
+    <Compile Include="Diagnostics\Tracer\Tracer.cs" />
+    <Compile Include="Diagnostics\Tracer\Visibility.cs" />
     <Compile Include="IReactiveClient.cs" />
     <Compile Include="IReactiveListener.cs" />
     <Compile Include="IReactiveSocket.cs" />
