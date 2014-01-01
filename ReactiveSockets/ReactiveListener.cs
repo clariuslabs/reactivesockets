@@ -9,12 +9,15 @@
     using System.Reactive.Subjects;
     using System.Threading.Tasks;
     using System.Reactive.Disposables;
+    using Diagnostics;
 
     /// <summary>
     /// Implements a TCP listener.
     /// </summary>
     public class ReactiveListener : IDisposable, IReactiveListener
     {
+        private static readonly ITracer tracer = Tracer.Get<ReactiveListener>();
+
         // Active connections kept so we can close on dispose.
         private List<ReactiveSocket> connections = new List<ReactiveSocket>();
         // Notifies subscribers of new connections.
@@ -33,7 +36,7 @@
         public ReactiveListener(int port)
         {
             this.port = port;
-            Tracer.Log.ReactiveListenerCreated(port);
+            tracer.ReactiveListenerCreated(port);
 
             this.socketDisposable = new CompositeDisposable();
         }
@@ -75,12 +78,12 @@
 
             listener.Start();
 
-            Tracer.Log.ReactiveListenerStarted(port);
+            tracer.ReactiveListenerStarted(port);
 
             listenerSubscription = Observable
                 .FromAsync(() => 
                     {
-                        Tracer.Log.ReactiveListenerAwaitingNewTcpConnection();
+                        tracer.ReactiveListenerAwaitingNewTcpConnection();
                         return Task.Factory.FromAsync<TcpClient>(listener.BeginAcceptTcpClient, listener.EndAcceptTcpClient, TaskCreationOptions.AttachedToParent);
                     })
                 .Repeat()
@@ -94,7 +97,7 @@
                             h => socket.Disposed += h, h => socket.Disposed -= h)
                         .FirstAsync().Subscribe(x =>
                         {
-                            Tracer.Log.ReactiveListenerRemovingDisposedSocket();
+                            tracer.ReactiveListenerRemovingDisposedSocket();
                             connections.Remove(socket);
                         });
 

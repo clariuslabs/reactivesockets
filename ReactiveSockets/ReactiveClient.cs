@@ -5,12 +5,14 @@ namespace ReactiveSockets
 {
     using System.Net.Sockets;
     using System.Threading.Tasks;
+    using Diagnostics;
 
     /// <summary>
     /// Implements the <see cref="IReactiveClient"/> over TCP.
     /// </summary>
     public class ReactiveClient : ReactiveSocket, IReactiveClient
     {
+        private static readonly ITracer tracer = Tracer.Get<ReactiveClient>();
         private string hostname;
         private int port;
         private readonly Func<Stream, Stream> streamTransform;
@@ -51,7 +53,7 @@ namespace ReactiveSockets
             this.hostname = hostname;
             this.port = port;
             this.streamTransform = streamTransform;
-            Tracer.Log.ReactiveClientCreated(hostname, port);
+            tracer.ReactiveClientCreated(hostname, port);
         }
 
         /// <summary>

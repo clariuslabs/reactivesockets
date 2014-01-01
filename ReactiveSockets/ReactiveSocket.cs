@@ -13,6 +13,7 @@
     using System.IO;
     using System.Reactive;
     using System.Reactive.Threading.Tasks;
+    using Diagnostics;
 
     /// <summary>
     /// Implements the reactive socket base class, which is used 
@@ -21,6 +22,8 @@
     /// </summary>
     public class ReactiveSocket : IReactiveSocket, IDisposable
     {
+        private static readonly ITracer tracer = Tracer.Get<ReactiveSocket>();
+
         private bool disposed;
         private TcpClient client;
         // This allows us to write to the underlying socket in a 
@@ -52,7 +55,7 @@
         internal ReactiveSocket(TcpClient client)
             : this()
         {
-            Tracer.Log.ReactiveSocketCreated();
+            tracer.ReactiveSocketCreated();
             Connect(client);
         }
 
@@ -143,27 +146,27 @@
 
             if (disposed)
             {
-                Tracer.Log.ReactiveSocketReconnectDisposed();
+                tracer.ReactiveSocketReconnectDisposed();
                 throw new ObjectDisposedException(this.ToString());
             }
 
             if (!client.Connected)
             {
-                Tracer.Log.ReactiveSocketReceivedDisconnectedTcpClient();
+                tracer.ReactiveSocketReceivedDisconnectedTcpClient();
                 throw new InvalidOperationException("Client must be connected");
             }
 
             // We're connecting an already connected client.
             if (this.client == client && client.Connected)
             {
-                Tracer.Log.ReactiveSocketAlreadyConnected();
+                tracer.ReactiveSocketAlreadyConnected();
                 return;
             }
 
             // We're switching to a new client?
             if (this.client != null && this.client != client)
             {
-                Tracer.Log.ReactiveSocketSwitchingUnderlyingClient();
+                tracer.ReactiveSocketSwitchingUnderlyingClient();
                 Disconnect();
             }
 
@@ -181,7 +184,7 @@
 
             Connected(this, EventArgs.Empty);
 
-            Tracer.Log.ReactiveSocketConnected();
+            tracer.ReactiveSocketConnected();
         }
 
         /// <summary>
@@ -214,7 +217,7 @@
             if (IsConnected)
             {
                 client.Close();
-                Tracer.Log.ReactiveSocketDisconnected();
+                tracer.ReactiveSocketDisconnected();
             }
 
             client = null;
@@ -237,7 +240,7 @@
             sender.OnCompleted();
             receiverTermination.OnNext(Unit.Default);
 
-            Tracer.Log.ReactiveSocketDisposed();
+            tracer.ReactiveSocketDisposed();
 
             Disposed(this, EventArgs.Empty);
         }
@@ -256,7 +259,7 @@
                 .SelectMany(x => x)
                 .Subscribe(x => this.received.Add(x), ex =>
                 {
-                    Tracer.Log.ReactiveSocketReadFailed(ex);
+                    tracer.ReactiveSocketReadFailed(ex);
                     Disconnect(false);
                 }, () => Disconnect(false));
         }
@@ -277,13 +280,13 @@
         {
             if (disposed)
             {
-                Tracer.Log.ReactiveSocketSendDisposed();
+                tracer.ReactiveSocketSendDisposed();
                 throw new ObjectDisposedException(this.ToString());
             }
 
             if (!IsConnected)
             {
-                Tracer.Log.ReactiveSocketSendDisconnected();
+                tracer.ReactiveSocketSendDisconnected();
                 throw new InvalidOperationException("Not connected");
             }
             

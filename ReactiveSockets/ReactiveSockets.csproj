@@ -57,12 +57,16 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Diagnostics\Tracer\ITracer.cs" />
+    <Compile Include="Diagnostics\Tracer\ITracerExtensions.cs" />
+    <Compile Include="Diagnostics\Tracer\ITracerManager.cs" />
+    <Compile Include="Diagnostics\Tracer\Tracer.cs" />
+    <Compile Include="Diagnostics\Tracer\Visibility.cs" />
     <Compile Include="IReactiveClient.cs" />
     <Compile Include="IReactiveListener.cs" />
     <Compile Include="IReactiveSocket.cs" />
     <Compile Include="ISocket.cs" />
     <Compile Include="ISocketExtensions.cs" />
-    <Compile Include="netfx\System\StringFormatWith.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -78,7 +82,7 @@
     <Compile Include="ReactiveListener.cs" />
     <Compile Include="ReactiveListenerSettings.cs" />
     <Compile Include="ReactiveSocket.cs" />
-    <Compile Include="Tracer.cs" />
+    <Compile Include="TracerExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
