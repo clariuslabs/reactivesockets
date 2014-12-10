@@ -21,7 +21,7 @@
         <tags>reactive socket</tags>
         <dependencies>
             <group targetFramework="net40">
-                <dependency id="Rx-Main" version="2.1.30214.0" />
+                <dependency id="Rx-Main" version="2.2.5" />
             </group>
         </dependencies>
         <frameworkAssemblies>
