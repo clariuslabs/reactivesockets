@@ -1,0 +1,1 @@
+NuGet.exe is commited here until the new release of NuGet adds support for assembly-level metadata.

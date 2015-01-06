@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 14
+VisualStudioVersion = 14.0.22310.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveSockets", "ReactiveSockets\ReactiveSockets.csproj", "{3B854D2F-1BC1-4080-A47A-9B53BA2F995D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveSockets.Tests", "ReactiveSockets.Tests\ReactiveSockets.Tests.csproj", "{0502F800-A9AC-41D6-A789-78B78A38CBB6}"
@@ -16,17 +18,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveServer", "Sample\Re
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReactiveProtocol", "Sample\ReactiveProtocol\ReactiveProtocol.csproj", "{064DC835-F7BD-4D21-B702-3F22ACF598D2}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{FA10C514-AA39-4748-8C49-CC589256D640}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{25C5F562-BB60-4B20-BAB3-972FFEDA4B26}"
 	ProjectSection(SolutionItems) = preProject
 		build.bat = build.bat
-		ReactiveSockets-rc.nuspec = ReactiveSockets-rc.nuspec
 		ReactiveSockets.nuspec = ReactiveSockets.nuspec
 		README.md = README.md
 	EndProjectSection

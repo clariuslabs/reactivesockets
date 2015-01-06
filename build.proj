@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright 2014 Daniel Cazzulino
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<Project ToolsVersion="4.0"
+		 InitialTargets="CheckPrerequisites"
+         DefaultTargets="Build"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<Import Project="build.props" Condition="Exists('build.props')" />
+
+	<PropertyGroup>
+		<Configuration Condition="'$(Configuration)' == ''">Release</Configuration>
+		<TrackFileAccess>false</TrackFileAccess>
+		<SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">$(MSBuildProjectDirectory)</SolutionDir>
+		<SolutionDir Condition="!HasTrailingSlash('$(SolutionDir)')">$(SolutionDir)\</SolutionDir>
+		<NuGetExe Condition="'$(OS)' == 'Windows_NT'">.nuget\NuGet.exe</NuGetExe>
+		<NuGetExe Condition="'$(OS)' != 'Windows_NT'">nuget</NuGetExe>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Solutions at the root directory are all built automatically unless overriden -->
+		<Solution Include="*.sln" Condition="'@(SolutionFile)' == ''">
+			<AdditionalProperties>TrackFileAccess=$(TrackFileAccess);Configuration=$(Configuration)</AdditionalProperties>
+		</Solution>
+		<Project Include="ReactiveSockets\ReactiveSockets.csproj">
+			<AdditionalProperties>TrackFileAccess=$(TrackFileAccess);Configuration=$(Configuration)</AdditionalProperties>
+		</Project>
+	</ItemGroup>
+
+	<Import Project="nuget.targets" />
+
+	<Target Name="Build">
+		<!-- We call ourselves after we restore (RestorePackages runs before Build), so that we can successfully import the SemanticGit targets -->
+		<MSBuild Projects="$(MSBuildThisFileFullPath)" Properties="_CoreBuild=true" Targets="CoreBuild" />
+	</Target>
+
+	<Target Name="CoreBuild" DependsOnTargets="SemanticGit:GetVersion" Condition="'$(_CoreBuild)' == 'true'">
+		<PropertyGroup Condition="'$(Version)' == ''">
+			<Version>$(_Major).$(_Minor).$(_Patch)</Version>
+		</PropertyGroup>
+		<MSBuild Projects="@(Solution)" />
+		<Message Importance="high" Text="Built version $(_Major).$(_Minor).$(_Patch) ($(_Commit))" />
+	</Target>
+
+	<Import Project="packages\SemanticGit\build\SemanticGit.props" Condition="'$(_CoreBuild)' == 'true'" />
+	<PropertyGroup>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<!-- We override git's location on Mac, since it's already in the path -->
+		<GitExe Condition="'$(OS)' != 'Windows_NT'">git</GitExe>
+	</PropertyGroup>
+	<Import Project="packages\SemanticGit\build\SemanticGit.targets" Condition="'$(_CoreBuild)' == 'true'" />
+
+	<Target Name="Clean">
+		<MSBuild
+			Projects="@(Solution)"
+			Targets="Clean"
+			Properties="TrackFileAccess=$(TrackFileAccess);Configuration=$(Configuration)"/>
+
+		<!-- Delete all .nupkg files since they aren't needed anymore and may confuse CI servers about what packages were actually generated -->
+		<ItemGroup>
+			<PackageBinaries Include="**\*.nupkg" />
+		</ItemGroup>
+
+		<Delete Files="@(PackageBinaries)" />
+	</Target>
+
+	<Target Name="Rebuild" DependsOnTargets="Clean;Build" />
+
+	<Target Name="RestorePackages" BeforeTargets="Build" DependsOnTargets="DownloadNuGet" Condition="Exists('packages.config')">
+		<Exec Command="&quot;$(NuGetExe)&quot; Install -OutputDirectory packages -ExcludeVersion" />
+
+		<!-- Delete all .nupkg files since they aren't needed anymore and may confuse CI servers about what packages were actually generated -->
+		<ItemGroup>
+			<PackageBinaries Include="**\*.nupkg" />
+		</ItemGroup>
+
+		<Delete Files="@(PackageBinaries)" />
+	</Target>
+
+	<PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+		<CodeTaskAssembly Condition="'$(MSBuildAssemblyVersion)' == ''">$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll</CodeTaskAssembly>
+		<!-- In VS2013, the assembly contains the VS version. -->
+		<CodeTaskAssembly Condition="'$(MSBuildAssemblyVersion)' == '12.0'">$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll</CodeTaskAssembly>
+		<!-- In VS2015+, the assembly was renamed, hopefully this will be the last condition! -->
+		<CodeTaskAssembly Condition="'$(MSBuildAssemblyVersion)' != '' and '$(MSBuildAssemblyVersion)' &gt;= '14.0'">$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll</CodeTaskAssembly>
+	</PropertyGroup>
+
+	<Target Name="DownloadNuGet" Condition="'$(OS)' == 'Windows_NT' And !Exists('$(NuGetExe)')">
+		<DownloadNuGet TargetPath="$(NuGetExe)" />
+	</Target>
+
+	<UsingTask TaskName="DownloadNuGet" TaskFactory="CodeTaskFactory" AssemblyFile="$(CodeTaskAssembly)">
+		<ParameterGroup>
+			<TargetPath ParameterType="System.String" Required="true" />
+		</ParameterGroup>
+		<Task>
+			<Reference Include="System.Core" />
+			<Using Namespace="System" />
+			<Using Namespace="System.IO" />
+			<Using Namespace="System.Net" />
+			<Using Namespace="Microsoft.Build.Framework" />
+			<Using Namespace="Microsoft.Build.Utilities" />
+			<Code Type="Fragment" Language="cs">
+				<![CDATA[
+                try {
+                    TargetPath = Path.GetFullPath(TargetPath);
+                    if (!Directory.Exists(Path.GetDirectoryName(TargetPath)))
+                        Directory.CreateDirectory(Path.GetDirectoryName(TargetPath));
+
+                    Log.LogMessage("Downloading latest version of NuGet.exe...");
+                    WebClient webClient = new WebClient();
+                    webClient.DownloadFile("https://www.nuget.org/nuget.exe", TargetPath);
+
+                    return true;
+                }
+                catch (Exception ex) {
+                    Log.LogErrorFromException(ex);
+                    return false;
+                }
+            ]]>
+			</Code>
+		</Task>
+	</UsingTask>
+
+</Project>
